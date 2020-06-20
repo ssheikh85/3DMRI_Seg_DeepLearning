@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # the array with indices of training volumes to be used for training, validation 
     # and testing respectively.
     # <YOUR CODE GOES HERE>
-    train, validate, test = np.split(keys, [int(.8 * len(keys)), int(.9 * len(keys))])
+    train, validate, test = np.split(keys, [int(.6 * len(keys)), int(.7 * len(keys))])
     
     split['train'] = train
     split['val'] = validate

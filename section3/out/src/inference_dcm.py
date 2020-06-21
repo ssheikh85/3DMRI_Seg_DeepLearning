@@ -23,6 +23,7 @@ import pydicom
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
+from PIL import ImageOps
 
 from inference.UNetInferenceAgent import UNetInferenceAgent
 
@@ -66,7 +67,7 @@ def get_predicted_volumes(pred):
     
     volume_post = np.sum(pred[:,1,:]  > 0)
     
-    total_volume = np.sum(pred  > 0)
+    total_volume = volume_ant + volume_post
     
     return {"anterior": volume_ant, "posterior": volume_post, "total": total_volume}
 
@@ -108,9 +109,9 @@ def create_report(inference, header, orig_vol, pred_vol):
     draw.multiline_text((10, 90),
                         f"Patient ID: {header.PatientID}\n"
                         f"Study Description: {header.StudyDescription}\n"
-                        f"Inferred HippoCampus volume (anterior): {inference['anterior']}\n"
-                        f"Inferred HippoCampus volume (posterior): {inference['posterior']}\n"
-                        f"Total inferred HippoCampus volume: {inference['total']}\n",
+                        f"Inferred HippoCampus volume (anterior): {inference['anterior']} cubic millimeters\n"
+                        f"Inferred HippoCampus volume (posterior): {inference['posterior']} cubic millimeters\n"
+                        f"Total inferred HippoCampus volume: {inference['total']} cubic millimeters\n",
                         (255, 255, 255), font=main_font)
 
     # STAND-OUT SUGGESTION:
@@ -120,12 +121,64 @@ def create_report(inference, header, orig_vol, pred_vol):
     #
     # Create a PIL image from array:
     # Numpy array needs to flipped, transposed and normalized to a matrix of values in the range of [0..255]
-#     nd_img = np.flip((slice/np.max(slice))*0xff).T.astype(np.uint8)
+    draw.text((10, 220), f"Showing Predictions at axial slices [{slice_nums[0]},{slice_nums[1]},{slice_nums[2]}]", (255, 255, 255), font=main_font)
+        
+    size = (256,512)
+ 
+    #slice and mask 1
+    slice_1 = orig_vol[slice_nums[0],:,:]
+    pred1 = pred_vol[slice_nums[0],:,:]
+    pred1[pred1 > 0] == 1
+    #np arrays for image and mask
+    nd_img1 = np.flip((slice_1/np.max(slice_1))*0xff).T.astype(np.uint8)
+    nd_img_mask1 = np.flip(pred1/np.max(pred1)).T.astype(np.uint8)
+    #Makes mask black and white
+    nd_img_mask1[nd_img_mask1 == 0] = 255
+    nd_img_mask1[nd_img_mask1 == 1] = 0
     # This is how you create a PIL image from numpy array
-#     pil_i = Image.fromarray(nd_img, mode="L").convert("RGBA").resize(<dimensions>)
-    # Paste the PIL image into our main report image object (pimg)
-#     pimg.paste(pil_i, box=(10, 280))
-
+    pil_i1 = Image.fromarray(nd_img1, mode="L").convert("RGBA").resize(size)
+    pil_mask1 = Image.fromarray(nd_img_mask1, mode="L").resize(size)
+    pil_mask_colored1 = ImageOps.colorize(pil_mask1, black = "red", white="white").convert("RGBA")
+    #Paste the PIL image into our main report image object (pimg)
+    pil_i_f1 = Image.blend(pil_i1, pil_mask_colored1, 0.5)
+    pimg.paste(pil_i_f1, box=(10, 280))
+    
+    #slice and mask 2
+    slice_2 = orig_vol[:,slice_nums[1],:]
+    pred1 = pred_vol[:,slice_nums[1],:]
+    pred1[pred1 > 0] == 1
+    #np arrays for image and mask
+    nd_img2 = np.flip((slice_2/np.max(slice_2))*0xff).T.astype(np.uint8)
+    nd_img_mask2 = np.flip(pred1/np.max(pred1)).T.astype(np.uint8)
+    #Makes mask black and white
+    nd_img_mask2[nd_img_mask2 == 0] = 255
+    nd_img_mask2[nd_img_mask2 == 1] = 0
+    # This is how you create a PIL image from numpy array
+    pil_i2 = Image.fromarray(nd_img2, mode="L").convert("RGBA").resize(size)
+    pil_mask2 = Image.fromarray(nd_img_mask2, mode="L").resize(size)
+    pil_mask_colored2 = ImageOps.colorize(pil_mask2, black = "red", white="white").convert("RGBA")
+    #Paste the PIL image into our main report image object (pimg)
+    pil_i_f2 = Image.blend(pil_i2, pil_mask_colored2, 0.5)
+    pimg.paste(pil_i_f2, box=(10+size[0]+20, 280))
+    
+    #slice and mask 3
+    slice_3 = orig_vol[:,:,slice_nums[2]]
+    pred3 = pred_vol[:,:,slice_nums[2]]
+    pred3[pred3 > 0] == 1
+    #np arrays for image and mask
+    nd_img3 = np.flip((slice_3/np.max(slice_3))*0xff).T.astype(np.uint8)
+    nd_img_mask3 = np.flip(pred3/np.max(pred3)).T.astype(np.uint8)
+    #Makes mask black and white
+    nd_img_mask3[nd_img_mask3 == 0] = 255
+    nd_img_mask3[nd_img_mask3 == 1] = 0
+    # This is how you create a PIL image from numpy array
+    pil_i3 = Image.fromarray(nd_img3, mode="L").convert("RGBA").resize(size)
+    pil_mask3 = Image.fromarray(nd_img_mask3, mode="L").resize(size)
+    pil_mask_colored3 = ImageOps.colorize(pil_mask3, black = "red", white="white").convert("RGBA")
+    #Paste the PIL image into our main report image object (pimg)
+    pil_i_f3 = Image.blend(pil_i3, pil_mask_colored3, 0.5)
+    pimg.paste(pil_i_f3, box=(10+(2*size[0])+40, 280))
+    
     return pimg
 
 def save_report_as_dcm(header, report, path):
@@ -296,7 +349,7 @@ if __name__ == "__main__":
 
     # Create and save the report
     print("Creating and pushing report...")
-    report_save_path = r"/home/workspace/out/out_report.dcm"
+    report_save_path = r"/home/workspace/out/report.dcm"
     # TASK: create_report is not complete. Go and complete it. 
     # STAND OUT SUGGESTION: save_report_as_dcm has some suggestions if you want to expand your
     # knowledge of DICOM format

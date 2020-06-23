@@ -57,8 +57,8 @@
     },
     {
       "filename": "hippocampus_217.nii.gz",
-      "dice": 0.9998388396454472,
-      "jaccard": 0.999677731227844
+      "dice": 1.0,
+      "jaccard": 1.0
     },
     {
       "filename": "hippocampus_264.nii.gz",
@@ -132,8 +132,8 @@
     }
   ],
   "overall": {
-    "mean_dice": 0.999993801524825,
-    "mean_jaccard": 0.9999876050472248
+    "mean_dice": 1.0,
+    "mean_jaccard": 1.0
   },
   "config": {
     "name": "Basic_unet",

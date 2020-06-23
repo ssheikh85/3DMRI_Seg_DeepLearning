@@ -63,9 +63,9 @@ def get_predicted_volumes(pred):
 
     # TASK: Compute the volume of your hippocampal prediction
     # <YOUR CODE HERE>
-    volume_ant = np.sum(pred[:,:,2]  > 0)
+    volume_ant = np.sum(pred == 2)
     
-    volume_post = np.sum(pred[:,1,:]  > 0)
+    volume_post = np.sum(pred == 1)
     
     total_volume = volume_ant + volume_post
     
